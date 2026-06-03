@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}{% if mode == 'edit' %}Edit listing{% else %}New listing{% endif %} — Renter{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <h1 class="h3 mb-4">{% if mode == 'edit' %}Edit listing{% else %}List a property{% endif %}</h1>
+
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">Details</div>
+                <div class="card-body row g-3">
+                    {% for field in form %}
+                        <div class="col-md-6">
+                            <label class="form-label">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+                            {{ field }}
+                            {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                            {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">Photos</div>
+                <div class="card-body">
+                    {{ formset.management_form }}
+                    {% for f in formset %}
+                        <div class="row g-2 align-items-center border-bottom py-2">
+                            {{ f.id }}
+                            <div class="col-md-5">{{ f.image }}</div>
+                            <div class="col-md-4">{{ f.caption }}</div>
+                            <div class="col-md-2 form-check">
+                                {{ f.is_primary }} <label class="form-check-label small">Primary</label>
+                            </div>
+                            {% if f.instance.pk %}
+                                <div class="col-md-1 form-check">
+                                    {{ f.DELETE }} <label class="form-check-label small text-danger">Del</label>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">{% if mode == 'edit' %}Save changes{% else %}Submit listing{% endif %}</button>
+            <a href="{% url 'listings:my-listings' %}" class="btn btn-link">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

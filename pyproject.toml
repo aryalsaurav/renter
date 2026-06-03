@@ -1,0 +1,61 @@
+[tool.poetry]
+name = "renter"
+version = "0.1.0"
+description = "Django rental listing platform — browse rentals publicly, manage listings with auth."
+authors = ["Renter Team"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+# Core
+Django = "^5.0.6"
+psycopg2-binary = "^2.9.9"
+django-environ = "^0.11.2"
+Pillow = "^10.3.0"
+
+# REST API + JWT
+djangorestframework = "^3.15.1"
+djangorestframework-simplejwt = "^5.3.1"
+django-filter = "^24.2"
+drf-spectacular = "^0.27.2"
+
+# Async tasks
+celery = "^5.4.0"
+redis = "^5.0.4"
+django-celery-beat = "^2.6.0"
+django-celery-results = "^2.5.1"
+
+# CORS for API clients
+django-cors-headers = "^4.3.1"
+
+[tool.poetry.group.prod]
+optional = true
+
+[tool.poetry.group.prod.dependencies]
+gunicorn = "^22.0.0"
+whitenoise = "^6.6.0"
+django-storages = "^1.14.3"
+boto3 = "^1.34.117"
+sentry-sdk = "^2.3.1"
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+django-debug-toolbar = "^4.4.2"
+pytest = "^8.2.1"
+pytest-django = "^4.8.0"
+factory-boy = "^3.3.0"
+coverage = "^7.5.3"
+ipython = "^8.24.0"
+
+[build-system]
+requires = ["poetry-core>=1.8.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+addopts = "-p no:cacheprovider"

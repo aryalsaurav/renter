@@ -1,0 +1,23 @@
+.listing-card img {
+    height: 200px;
+    object-fit: cover;
+}
+.listing-card {
+    transition: transform .12s ease, box-shadow .12s ease;
+}
+.listing-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .12) !important;
+}
+.price-badge {
+    font-size: 1.05rem;
+}
+.gallery img {
+    height: 120px;
+    object-fit: cover;
+    cursor: pointer;
+    border-radius: .375rem;
+}
+.locked-contact {
+    background: repeating-linear-gradient(45deg, #f1f3f5, #f1f3f5 10px, #e9ecef 10px, #e9ecef 20px);
+}

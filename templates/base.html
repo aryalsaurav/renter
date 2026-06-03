@@ -1,0 +1,63 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Renter — Find your next home{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="{% url 'listings:list' %}">🏠 Renter</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="nav">
+            <ul class="navbar-nav ms-auto align-items-lg-center">
+                <li class="nav-item"><a class="nav-link" href="{% url 'listings:list' %}">Browse</a></li>
+                {% if user.is_authenticated %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'listings:create' %}">+ List a property</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'listings:my-listings' %}">My listings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:profile' %}">{{ user.display_name }}</a></li>
+                    {% if user.is_staff %}
+                        <li class="nav-item"><a class="nav-link" href="/admin/">Admin</a></li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <form action="{% url 'accounts:logout' %}" method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-outline-light ms-2" type="submit">Logout</button>
+                        </form>
+                    </li>
+                {% else %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:login' %}">Login</a></li>
+                    <li class="nav-item"><a class="btn btn-primary btn-sm ms-2" href="{% url 'accounts:signup' %}">Sign up</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<main class="container py-4 flex-grow-1">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="bg-dark text-light py-3 mt-auto">
+    <div class="container text-center small">
+        Renter &middot; Browse rentals freely. Owner contact is visible to signed-in users only.
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

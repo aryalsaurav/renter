@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}My listings — Renter{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">My listings</h1>
+    <a href="{% url 'listings:create' %}" class="btn btn-primary">+ New listing</a>
+</div>
+
+{% if not user.is_verified %}
+<div class="alert alert-warning small">
+    Your account is not verified yet, so new listings go through manual review before becoming public.
+</div>
+{% endif %}
+
+<div class="table-responsive">
+    <table class="table align-middle bg-white shadow-sm rounded">
+        <thead class="table-light">
+            <tr>
+                <th>Title</th><th>City</th><th>Rent</th><th>Status</th><th>Available</th><th>Views</th><th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for listing in listings %}
+            <tr>
+                <td><a href="{{ listing.get_absolute_url }}">{{ listing.title }}</a></td>
+                <td>{{ listing.city }}</td>
+                <td>${{ listing.monthly_rent|floatformat:0|intcomma }}</td>
+                <td>
+                    {% if listing.status == 'published' %}<span class="badge bg-success">Published</span>
+                    {% elif listing.status == 'pending' %}<span class="badge bg-warning text-dark">Pending</span>
+                    {% elif listing.status == 'rejected' %}<span class="badge bg-danger">Rejected</span>
+                    {% else %}<span class="badge bg-secondary">Draft</span>{% endif %}
+                </td>
+                <td>{% if listing.is_available %}Yes{% else %}No{% endif %}</td>
+                <td>{{ listing.views_count }}</td>
+                <td class="text-end">
+                    <a href="{% url 'listings:update' listing.slug %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                    <a href="{% url 'listings:delete' listing.slug %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="text-center text-muted py-4">You haven't created any listings yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

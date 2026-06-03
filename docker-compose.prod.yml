@@ -1,0 +1,77 @@
+name: renter-prod
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: renter_postgres_prod
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: renter_redis_prod
+    restart: unless-stopped
+
+  django:
+    build:
+      context: .
+      dockerfile: ./docker/prod/django/Dockerfile
+    image: renter_prod_django
+    container_name: renter_django_prod
+    command: /start.sh
+    env_file:
+      - .env.prod
+    expose:
+      - "8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  celeryworker:
+    image: renter_prod_django
+    container_name: renter_celeryworker_prod
+    command: /start-celeryworker.sh
+    env_file:
+      - .env.prod
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
+  celerybeat:
+    image: renter_prod_django
+    container_name: renter_celerybeat_prod
+    command: /start-celerybeat.sh
+    env_file:
+      - .env.prod
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: renter_nginx_prod
+    volumes:
+      - ./docker/prod/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - django
+    restart: unless-stopped
+
+volumes:
+  postgres_data_prod: {}

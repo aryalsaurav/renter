@@ -1,0 +1,83 @@
+name: renter-test
+
+# Test stack for CI / local test runs.
+#
+# - Builds the PRODUCTION Dockerfile, but with the `dev` group included so the
+#   pytest toolchain is available in the image.
+# - All configuration is passed INLINE via `environment:` (no .env file) so the
+#   workflow is self-contained and reproducible.
+# - Tests run against the real PostgreSQL + Redis services defined below.
+#
+# Usage:
+#   docker compose -f docker-compose.test.yml build
+#   docker compose -f docker-compose.test.yml run --rm django
+#   docker compose -f docker-compose.test.yml down -v
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: renter_test
+      POSTGRES_USER: renter_test
+      POSTGRES_PASSWORD: renter_test
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U renter_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  django:
+    build:
+      context: .
+      dockerfile: ./docker/prod/django/Dockerfile
+      args:
+        # Include the dev group (pytest, pytest-django, factory-boy) in the image.
+        POETRY_INSTALL_ARGS: "--only main,prod,dev"
+    image: renter_test_django
+    command: ["pytest", "-v"]
+    environment:
+      # --- Django ---
+      DJANGO_SETTINGS_MODULE: config.settings.test
+      DJANGO_SECRET_KEY: test-secret-key-not-used-anywhere-real
+      DJANGO_DEBUG: "False"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+      DJANGO_TIME_ZONE: UTC
+      DJANGO_LOG_LEVEL: WARNING
+
+      # --- Use the PostgreSQL service for tests ---
+      USE_POSTGRES_FOR_TESTS: "True"
+      POSTGRES_DB: renter_test
+      POSTGRES_USER: renter_test
+      POSTGRES_PASSWORD: renter_test
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+
+      # --- Redis / Celery (tasks run eagerly in tests) ---
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      # django-db result backend; its tables are created by the test migrations.
+      CELERY_RESULT_BACKEND: django-db
+      CELERY_TASK_ALWAYS_EAGER: "True"
+
+      # --- JWT ---
+      JWT_ACCESS_TOKEN_LIFETIME_MIN: "30"
+      JWT_REFRESH_TOKEN_LIFETIME_DAYS: "7"
+
+      # --- Email (overridden to locmem in test settings) ---
+      DJANGO_DEFAULT_FROM_EMAIL: no-reply@renter.test
+      LISTING_MODERATION_EMAIL: moderation@renter.test
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy

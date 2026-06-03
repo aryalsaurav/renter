@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}{{ listing.title }} — Renter{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        {% with primary=listing.images.first %}
+            {% if primary %}
+                <img src="{{ primary.image.url }}" class="img-fluid rounded mb-3 w-100" style="max-height:420px;object-fit:cover;" alt="{{ listing.title }}">
+            {% else %}
+                <img src="https://placehold.co/900x500?text=No+Photo" class="img-fluid rounded mb-3 w-100" alt="No photo">
+            {% endif %}
+        {% endwith %}
+
+        {% if listing.images.count > 1 %}
+        <div class="row g-2 gallery mb-4">
+            {% for img in listing.images.all %}
+                <div class="col-3">
+                    <img src="{{ img.image.url }}" class="img-fluid w-100" alt="{{ img.caption }}">
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <h1 class="h3">{{ listing.title }}</h1>
+        <p class="text-muted">📍 {{ listing.address_line }}, {{ listing.location_summary }}</p>
+
+        <div class="d-flex gap-3 mb-3">
+            <span class="badge bg-secondary">{{ listing.get_property_type_display }}</span>
+            <span>🛏 {{ listing.bedrooms }} bedrooms</span>
+            <span>🛁 {{ listing.bathrooms }} bathrooms</span>
+            {% if listing.area_sqft %}<span>📐 {{ listing.area_sqft }} sqft</span>{% endif %}
+        </div>
+
+        <h5>Description</h5>
+        <p style="white-space: pre-line;">{{ listing.description }}</p>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <div class="h4 text-primary">${{ listing.monthly_rent|floatformat:0|intcomma }}<span class="fs-6 text-muted">/month</span></div>
+                {% if listing.deposit %}<p class="small text-muted mb-2">Deposit: ${{ listing.deposit|floatformat:0|intcomma }}</p>{% endif %}
+                <p class="small mb-1">Available from: {{ listing.available_from }}</p>
+                <p class="small mb-0">👁 {{ listing.views_count }} views</p>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header fw-bold">Owner contact</div>
+            <div class="card-body">
+                {% if user.is_authenticated %}
+                    <p class="mb-1"><strong>{{ listing.owner.display_name }}</strong></p>
+                    <p class="mb-1">✉️ <a href="mailto:{{ listing.owner.email }}">{{ listing.owner.email }}</a></p>
+                    {% if listing.owner.phone %}<p class="mb-0">📞 {{ listing.owner.phone }}</p>{% endif %}
+                {% else %}
+                    <div class="locked-contact rounded p-3 text-center">
+                        <p class="mb-2">🔒 Owner contact details are hidden.</p>
+                        <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-sm btn-primary">Log in to view</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if is_owner %}
+            <div class="card shadow-sm mt-3 border-warning">
+                <div class="card-body">
+                    <p class="small mb-2">You own this listing — status: <strong>{{ listing.get_status_display }}</strong></p>
+                    <a href="{% url 'listings:update' listing.slug %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                    <a href="{% url 'listings:delete' listing.slug %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
