@@ -31,9 +31,9 @@ def listing_list(request):
         qs = qs.filter(property_type=ptype)
     if q:
         qs = qs.filter(
-            Q(title__icontains=q)
-            | Q(description__icontains=q)
-            | Q(address_line__icontains=q)
+            Q(title__icontains=q) |
+            Q(description__icontains=q) |
+            Q(address_line__icontains=q)
         )
     if min_rent.isdigit():
         qs = qs.filter(monthly_rent__gte=min_rent)

@@ -167,7 +167,7 @@ poetry install --with dev
 poetry run pytest
 ```
 
-Tests run against fast in-memory SQLite (`config.settings.test`) with Celery in
+Tests run against fast in-memory SQLite (`config.settings`) with Celery in
 eager mode — no Postgres/Redis needed. 33 tests cover models, tasks, the JWT API
 (including the public/owner visibility rules), and the session-auth templates.
 

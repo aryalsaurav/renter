@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 
 from apps.accounts.tests.factories import UserFactory, VerifiedUserFactory
-from apps.listings.models import Listing, ListingStatus
+from apps.listings.models import ListingStatus
 from apps.listings.tests.factories import ListingFactory, PendingListingFactory
 
 pytestmark = pytest.mark.django_db

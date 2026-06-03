@@ -1,83 +1,81 @@
-name: renter-test
-
-# Test stack for CI / local test runs.
-#
-# - Builds the PRODUCTION Dockerfile, but with the `dev` group included so the
-#   pytest toolchain is available in the image.
-# - All configuration is passed INLINE via `environment:` (no .env file) so the
-#   workflow is self-contained and reproducible.
-# - Tests run against the real PostgreSQL + Redis services defined below.
-#
-# Usage:
-#   docker compose -f docker-compose.test.yml build
-#   docker compose -f docker-compose.test.yml run --rm django
-#   docker compose -f docker-compose.test.yml down -v
-
 services:
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: renter_test
-      POSTGRES_USER: renter_test
-      POSTGRES_PASSWORD: renter_test
-    tmpfs:
-      - /var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U renter_test"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+  db:
+     image: postgres:16
+     volumes:
+      - postgres-data:/var/lib/postgresql/data
+     environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+     healthcheck:
+       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+       interval: 10s
+       retries: 5
+       timeout: 5s
+
+  web:
+     build:
+       context: .
+       dockerfile: docker/Dockerfile.prod
+     image: renter:latest
+     depends_on:
+      db:
+        condition: service_healthy
+     restart: always
+     environment:
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: ${DEBUG}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      ALLOWED_HOSTS: localhost
+     ports:
+       - "8000:8000"
+     command: "gunicorn config.wsgi:application --bind 0.0.0.0:8000"
+     healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
 
   redis:
-    image: redis:7-alpine
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
+     image: redis:latest
 
-  django:
-    build:
-      context: .
-      dockerfile: ./docker/prod/django/Dockerfile
-      args:
-        # Include the dev group (pytest, pytest-django, factory-boy) in the image.
-        POETRY_INSTALL_ARGS: "--only main,prod,dev"
-    image: renter_test_django
-    command: ["pytest", "-v"]
-    environment:
-      # --- Django ---
-      DJANGO_SETTINGS_MODULE: config.settings.test
-      DJANGO_SECRET_KEY: test-secret-key-not-used-anywhere-real
-      DJANGO_DEBUG: "False"
-      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
-      DJANGO_TIME_ZONE: UTC
-      DJANGO_LOG_LEVEL: WARNING
-
-      # --- Use the PostgreSQL service for tests ---
-      USE_POSTGRES_FOR_TESTS: "True"
-      POSTGRES_DB: renter_test
-      POSTGRES_USER: renter_test
-      POSTGRES_PASSWORD: renter_test
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: "5432"
-
-      # --- Redis / Celery (tasks run eagerly in tests) ---
-      REDIS_URL: redis://redis:6379/0
-      CELERY_BROKER_URL: redis://redis:6379/0
-      # django-db result backend; its tables are created by the test migrations.
-      CELERY_RESULT_BACKEND: django-db
-      CELERY_TASK_ALWAYS_EAGER: "True"
-
-      # --- JWT ---
-      JWT_ACCESS_TOKEN_LIFETIME_MIN: "30"
-      JWT_REFRESH_TOKEN_LIFETIME_DAYS: "7"
-
-      # --- Email (overridden to locmem in test settings) ---
-      DJANGO_DEFAULT_FROM_EMAIL: no-reply@renter.test
-      LISTING_MODERATION_EMAIL: moderation@renter.test
+  celery:
+    image: renter:latest
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - db
+      - redis
+      - web
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: ${DEBUG}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+    command: celery -A config.celery worker --loglevel=info
+
+  celery_beat:
+    image: renter:latest
+    command: celery -A config.celery beat --loglevel=info
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: ${DEBUG}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+    depends_on:
+      - db
+      - redis
+      - web
+      - celery
+
+
+volumes:
+  postgres-data:

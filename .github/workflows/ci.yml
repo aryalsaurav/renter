@@ -1,0 +1,96 @@
+name: Build and Test
+
+on:
+    pull_request:
+        branches:
+            - dev 
+            - main
+
+jobs:
+    flake8:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v5
+            
+            - name: Install flake8
+              run: pip install flake8
+            
+            - name:  Setup Python
+              uses: actions/setup-python@v6
+              with:
+                python-version: 3.12
+            
+            - name: Flake8 Test 
+              run: flake8 . 
+    
+    test:
+        runs-on: ubuntu-latest
+        env:
+          DJANGO_SECRET_KEY: test-insecure-secret-key-not-for-production
+          DJANGO_DEBUG: False
+          DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+
+          POSTGRES_DB: renter
+          POSTGRES_USER: renter
+          POSTGRES_PASSWORD: renter
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_CONN_MAX_AGE: 60
+
+          DJANGO_TIME_ZONE: UTC
+
+          JWT_ACCESS_TOKEN_LIFETIME_MIN: 30
+          JWT_REFRESH_TOKEN_LIFETIME_DAYS: 7
+
+          REDIS_URL: redis://localhost:6379/0
+          CELERY_BROKER_URL: redis://localhost:6379/0
+          CELERY_RESULT_BACKEND: django-db
+          CELERY_TASK_ALWAYS_EAGER: True
+
+          CORS_ALLOWED_ORIGINS: http://localhost:3000
+
+          DJANGO_DEFAULT_FROM_EMAIL: no-reply@renter.local
+          LISTING_MODERATION_EMAIL: moderation@renter.local
+
+          DJANGO_LOG_LEVEL: INFO
+
+          AWS_ACCESS_KEY_ID: test-access-key
+          AWS_SECRET_ACCESS_KEY: test-secret-key
+          AWS_STORAGE_BUCKET_NAME: test-bucket
+          AWS_S3_REGION_NAME: ap-south-1
+        
+        services:
+          postgres:
+            image: postgres:16
+            env:
+              POSTGRES_DB: renter
+              POSTGRES_USER: renter
+              POSTGRES_PASSWORD: renter
+            ports: 
+              - 5432:5432
+            
+
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v5
+            
+            - name: Setup Python
+              uses: actions/setup-python@v6
+              with: 
+                python-version: 3.12
+
+            - name: Poetry Install
+              run: pip install poetry
+            
+            - name: Install dependencies  
+              run: |
+                poetry config virtualenvs.create false
+                poetry install --no-root --with dev,prod
+            
+            - name: Check Migration
+              run: python manage.py makemigrations --check --dry-run
+            
+            - name: Run Test cases
+              run: poetry run pytest -v

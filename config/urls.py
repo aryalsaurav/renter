@@ -11,6 +11,7 @@ from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularSwaggerView,
 )
+from django.http import JsonResponse
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -26,13 +27,8 @@ urlpatterns = [
         SpectacularSwaggerView.as_view(url_name="schema"),
         name="swagger-ui",
     ),
+    path('health/', lambda request: JsonResponse({"status": "OK"})),
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    try:
-        import debug_toolbar
-
-        urlpatterns += [path("__debug__/", include(debug_toolbar.urls))]
-    except ImportError:
-        pass

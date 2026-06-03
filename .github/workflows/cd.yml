@@ -1,0 +1,13 @@
+name: Build and Deploy
+
+on:
+    pull_request:
+        branches: [main]
+        types: [closed]
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v5
