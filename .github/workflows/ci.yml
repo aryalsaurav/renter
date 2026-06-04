@@ -167,7 +167,7 @@ jobs:
         - name: Check system reachable
           run: |
             for i in {1..20}; do
-              curl -f https://localhost:8000/health/  && exit 0
+              curl -f http://localhost:8000/health/  && exit 0
 
               echo "waiting for applications"
               docker compose -f docker-compose.test.yml logs web
