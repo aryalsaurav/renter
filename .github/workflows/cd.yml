@@ -4,6 +4,12 @@ on:
     pull_request:
         branches: [main]
         types: [closed]
+    push:
+        branches: [main]
+
+permissions:
+    contents: read
+    packages: write
 
 jobs:
     build:
@@ -29,6 +35,6 @@ jobs:
                 context: .
                 file: docker/Dockerfile.prod
                 push: true
-                tags:
+                tags: |
                     ghcr.io/${{github.repository}}:latest
                     ghcr.io/${{github.repository}}:${{github.sha}}
