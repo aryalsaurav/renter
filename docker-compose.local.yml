@@ -1,76 +1,66 @@
-name: renter-local
-
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: renter_postgres_local
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-renter}
-      POSTGRES_USER: ${POSTGRES_USER:-renter}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-renter}
-    volumes:
-      - postgres_data_local:/var/lib/postgresql/data
-    ports:
-      - "5431:5431"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-renter}"]
-      interval: 5s
-      timeout: 5s
+  db:
+     image: postgres:16
+     volumes:
+      - postgres-db-data:/var/lib/postgresql/data
+     env_file:
+       - .env
+     ports:
+       - "5431:5432"
+     healthcheck:
+       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+       interval: 10s
+       retries: 5
+       timeout: 5s
+
+  web:
+     build: .
+     image: renter:latest
+     volumes:
+       - .:/app
+     depends_on:
+      db:
+        condition: service_healthy
+     restart: always
+     env_file:
+      - .env
+     environment:
+      RUN_MIGRATIONS: "true"
+     ports:
+       - "8001:8001"
+     command: "python manage.py runserver 0.0.0.0:8001"
+     healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 10s
+      timeout: 30s
       retries: 5
 
   redis:
-    image: redis:7-alpine
-    container_name: renter_redis_local
-    ports:
-      - "6379:6379"
-
-  django:
-    build:
-      context: .
-      dockerfile: ./docker/local/django/Dockerfile
-    image: renter_local_django
-    container_name: renter_django_local
-    command: /start.sh
-    volumes:
-      - .:/app
-      - media_local:/app/media
-    env_file:
+     image: redis:latest
+     env_file:
       - .env
-    ports:
-      - "8001:8001"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_started
 
-  celeryworker:
-    image: renter_local_django
-    container_name: renter_celeryworker_local
-    command: /start-celeryworker.sh
-    volumes:
-      - .:/app
-      - media_local:/app/media
-    env_file:
-      - .env
+  celery:
+    image: renter:latest
     depends_on:
-      - postgres
+      - db
       - redis
-      - django
+      - web
+    env_file:
+      - .env
+    command: celery -A cicd_proj.celery worker --loglevel=info
 
-  celerybeat:
-    image: renter_local_django
-    container_name: renter_celerybeat_local
-    command: /start-celerybeat.sh
-    volumes:
-      - .:/app
+  celery_beat:
+    image: renter:latest
+    command: celery -A cicd_proj.celery beat --loglevel=info
     env_file:
       - .env
     depends_on:
-      - postgres
+      - db
       - redis
-      - django
+      - web
+      - celery
+
 
 volumes:
-  postgres_data_local: {}
-  media_local: {}
+  postgres-db-data:
