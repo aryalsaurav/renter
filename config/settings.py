@@ -282,10 +282,6 @@ if DEBUG:
 
     # Email printed to the console.
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-
-    # Debug toolbar.
-    INSTALLED_APPS += ["debug_toolbar"]
-    MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
     # Show the toolbar inside Docker where the request IP is not 127.0.0.1.
     INTERNAL_IPS = ["127.0.0.1"]
     import socket
