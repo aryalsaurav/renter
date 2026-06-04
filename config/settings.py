@@ -283,14 +283,6 @@ if DEBUG:
     # Email printed to the console.
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
     # Show the toolbar inside Docker where the request IP is not 127.0.0.1.
-    INTERNAL_IPS = ["127.0.0.1"]
-    import socket
-
-    try:
-        hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
-        INTERNAL_IPS += [ip[: ip.rfind(".")] + ".1" for ip in ips]
-    except socket.gaierror:
-        pass
 
 else:
     # -----------------------------------------------------------------------
