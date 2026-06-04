@@ -170,7 +170,7 @@ jobs:
               curl -f https://localhost:8000/health/  && exit 0
 
               echo "waiting for applications"
-              docker compose -f docker-compose.test.yml web 
+              docker compose -f docker-compose.test.yml logs web
               sleep 5
             done
             echo "Application failed to start"
