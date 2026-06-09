@@ -57,4 +57,13 @@ jobs:
           run: |
             ssh ${{secrets.EC2_USER}}@${{secrets.EC2_HOST}} \
             "/home/${{secrets.EC2_USER}}/renter/deploy.sh ${{github.sha}}"
+    
+    verify:
+      needs: deploy
+      runs-on: ubuntu-latest
+
+      steps:
+        - name: Show deployed verison
+          run: |
+            echo "Version: ${{github.sha}}"
 
