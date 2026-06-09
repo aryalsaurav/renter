@@ -66,4 +66,3 @@ jobs:
         - name: Show deployed verison
           run: |
             echo "Version: ${{github.sha}}"
-
