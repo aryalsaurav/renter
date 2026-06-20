@@ -2,10 +2,10 @@ name: Build and Deploy
 
 on:
     pull_request:
-        branches: [main]
+        branches: [no-branch]
         types: [closed]
     push:
-        branches: [main]
+        branches: [no-branch]
 
 permissions:
     contents: read
