@@ -179,3 +179,37 @@ poetry install --with dev
 poetry run python manage.py migrate
 poetry run python manage.py runserver
 ```
+
+
+## Deployment Flow build
+IAM
+- OIDC Provider
+- GitHub Deploy Role
+- ECS Task Execution Role
+- S3Role
+
+Networking
+- VPC
+- Public Subnets
+- Private Subnets
+- Internet Gateway
+- NAT Gateway
+- Route Tables
+
+Load Balancing
+- ALB
+- Target Group
+
+Compute
+- Launch Template
+- Auto Scaling Group
+
+ECS
+- Cluster
+- Service
+- Task Definitions
+
+Storage
+- ECR
+- S3
+- Database
