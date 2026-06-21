@@ -75,6 +75,8 @@ jobs:
                 run-task: true
                 run-task-launch-type: EC2
                 wait-for-task-stopped: true
+                run-task-subnets: ${{secrets.VPC_SUBNETS}}
+                run-task-security-groups: ${{secrets.TASK_SECURITY_GROUP}}
             
             # server
             - name: Download current task definition
