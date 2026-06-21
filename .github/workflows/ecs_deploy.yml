@@ -73,7 +73,7 @@ jobs:
                   --cluster renter-cluster \
                   --task-definition renter-web-migration \
                   --launch-type EC2 \
-                  --network-configuration "awsvpcConfiguration={subnets=[${{ vars.TASK_SUBNETS }}],securityGroups=[${{ vars.TASK_SG }}]}" \
+                  --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.VPC_SUBNETS }}],securityGroups=[${{ secrets.TASK_SECURITY_GROUP }}]}" \
                   --query 'tasks[0].taskArn' --output text)
 
                 echo "Started: $TASK_ARN"
