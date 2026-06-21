@@ -73,6 +73,7 @@ jobs:
                 task-definition: ${{steps.migrate.outputs.task-definition}}
                 cluster: ${{vars.CLUSTER_NAME}}
                 run-task: true
+                run-task-launch-type: EC2
                 wait-for-task-stopped: true
             
             # server
