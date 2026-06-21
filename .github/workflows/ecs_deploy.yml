@@ -68,15 +68,21 @@ jobs:
                 image: ${{vars.AWS_ECR_REPO}}:${{ env.IMAGE_TAG }}
             
             - name: Run schema migration task
-              uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-              with:
-                task-definition: ${{steps.migrate.outputs.task-definition}}
-                cluster: ${{vars.CLUSTER_NAME}}
-                run-task: true
-                run-task-launch-type: EC2
-                wait-for-task-stopped: true
-                run-task-subnets: ${{secrets.VPC_SUBNETS}}
-                run-task-security-groups: ${{secrets.TASK_SECURITY_GROUP}}
+              run: |
+                TASK_ARN=$(aws ecs run-task \
+                  --cluster renter-cluster \
+                  --task-definition renter-web-migration \
+                  --launch-type EC2 \
+                  --network-configuration "awsvpcConfiguration={subnets=[${{ vars.TASK_SUBNETS }}],securityGroups=[${{ vars.TASK_SG }}]}" \
+                  --query 'tasks[0].taskArn' --output text)
+
+                echo "Started: $TASK_ARN"
+                aws ecs wait tasks-stopped --cluster renter-cluster --tasks "$TASK_ARN"
+
+                EXIT=$(aws ecs describe-tasks --cluster renter-cluster --tasks "$TASK_ARN" \
+                  --query 'tasks[0].containers[0].exitCode' --output text)
+                echo "Exit code: $EXIT"
+                [ "$EXIT" = "0" ] || exit 1
             
             # server
             - name: Download current task definition
