@@ -31,4 +31,7 @@ jobs:
             
             - name: Get aws sts identity
               run: aws sts get-caller-identity
+            
+            - name: ECR login
+              uses: aws-actions/amazon-ecr-login@v2
 
