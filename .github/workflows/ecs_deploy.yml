@@ -59,7 +59,7 @@ jobs:
                 --task-definition renter-web-migration \
                 --query taskDefinition > migration-task-definition.json
             
-            - name: Update task definition with new image
+            - name: Update task definition with new image migration
               id: migrate
               uses: aws-actions/amazon-ecs-render-task-definition@v1
               with: 
@@ -67,7 +67,7 @@ jobs:
                 container-name: server-migration
                 image: ${{vars.AWS_ECR_REPO}}:${{ env.IMAGE_TAG }}
             
-            - name: Run schema migration task
+            - name: Run schema migration task 
               run: |
                 TASK_ARN=$(aws ecs run-task \
                   --cluster renter-cluster \
@@ -85,13 +85,13 @@ jobs:
                 [ "$EXIT" = "0" ] || exit 1
             
             # server
-            - name: Download current task definition
+            - name: Download current task definition server
               run: |
                 aws ecs describe-task-definition \
                 --task-definition renter-web \
                 --query taskDefinition > task-definition.json
             
-            - name: Update task definition with new image
+            - name: Update task definition with new image for server
               id: task-def
               uses: aws-actions/amazon-ecs-render-task-definition@v1
               with: 
