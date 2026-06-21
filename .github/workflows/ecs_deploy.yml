@@ -73,7 +73,7 @@ jobs:
                 task-definition: ${{steps.migrate.outputs.task-definition}}
                 cluster: ${{vars.CLUSTER_NAME}}
                 run-task: true
-                wait-for-service-stability: true
+                wait-for-task-stopped: true
             
             # server
             - name: Download current task definition
