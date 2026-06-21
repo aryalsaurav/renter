@@ -1,14 +1,14 @@
 name: ECS Build and Deploy
 
-# on:
-#     pull_request:
-#         branches: [main]
-#         types: [closed]
-#     push:
-#         branches: [main]
-
 on:
-    workflow_dispatch:
+    pull_request:
+        branches: [main]
+        types: [closed]
+    push:
+        branches: [main]
+
+# on:
+#     workflow_dispatch:
 
 permissions:
     id-token: write
@@ -20,8 +20,10 @@ concurrency:
 
 jobs:
     build-and-deploy:
+        if: >-
+          github.event_name == 'push' ||
+          (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
         runs-on: ubuntu-latest
-        
         steps:
             - name: Checkout repository
               uses: actions/checkout@v5
@@ -51,7 +53,6 @@ jobs:
                     ${{ vars.AWS_ECR_REPO }}:${{ env.IMAGE_TAG }}
             
             # migration task
-            
             - name: Download Migration current task definition
               run: |
                 aws ecs describe-task-definition \
@@ -75,7 +76,6 @@ jobs:
                 wait-for-service-stability: true
             
             # server
-
             - name: Download current task definition
               run: |
                 aws ecs describe-task-definition \
