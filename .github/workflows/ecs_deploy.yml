@@ -89,7 +89,7 @@ jobs:
 
                 EXIT=$(aws ecs describe-tasks --cluster ${{vars.CLUSTER_NAME}} --tasks "$TASK_ARN" \
                   --query 'tasks[0].containers[0].exitCode' --output text)
-                echo "Exit code: $EXIT"
+                echo "Exit code : $EXIT"
                 [ "$EXIT" = "0" ] || exit 1
             
             # server
