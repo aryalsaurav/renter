@@ -80,7 +80,7 @@ jobs:
                 TASK_ARN=$(aws ecs run-task \
                   --cluster ${{vars.CLUSTER_NAME}} \
                   --task-definition ${{ steps.register.outputs.arn }} \
-                  --launch-type EC2 \
+                  --launch-type FARGATE \
                   --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.VPC_SUBNETS }}],securityGroups=[${{ secrets.TASK_SECURITY_GROUP }}]}" \
                   --query 'tasks[0].taskArn' --output text)
 
