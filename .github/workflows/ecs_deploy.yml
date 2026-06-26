@@ -56,7 +56,7 @@ jobs:
             - name: Download Migration current task definition
               run: |
                 aws ecs describe-task-definition \
-                --task-definition renter-web-migration \
+                --task-definition ${{vars.MIGRATION_TASK_DEFINITION}} \
                 --query taskDefinition > migration-task-definition.json
             
             - name: Update task definition with new image migration
@@ -78,16 +78,16 @@ jobs:
             - name: Run schema migration task
               run: |
                 TASK_ARN=$(aws ecs run-task \
-                  --cluster renter-cluster \
+                  --cluster ${{vars.CLUSTER_NAME}} \
                   --task-definition ${{ steps.register.outputs.arn }} \
                   --launch-type EC2 \
                   --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.VPC_SUBNETS }}],securityGroups=[${{ secrets.TASK_SECURITY_GROUP }}]}" \
                   --query 'tasks[0].taskArn' --output text)
 
                 echo "Started: $TASK_ARN"
-                aws ecs wait tasks-stopped --cluster renter-cluster --tasks "$TASK_ARN"
+                aws ecs wait tasks-stopped --cluster ${{vars.CLUSTER_NAME}} --tasks "$TASK_ARN"
 
-                EXIT=$(aws ecs describe-tasks --cluster renter-cluster --tasks "$TASK_ARN" \
+                EXIT=$(aws ecs describe-tasks --cluster ${{vars.CLUSTER_NAME}} --tasks "$TASK_ARN" \
                   --query 'tasks[0].containers[0].exitCode' --output text)
                 echo "Exit code: $EXIT"
                 [ "$EXIT" = "0" ] || exit 1
@@ -96,7 +96,7 @@ jobs:
             - name: Download current task definition server
               run: |
                 aws ecs describe-task-definition \
-                --task-definition renter-web \
+                --task-definition ${{vars.SERVER_TASK_DEFINITION}} \
                 --query taskDefinition > task-definition.json
             
             - name: Update task definition with new image for server
