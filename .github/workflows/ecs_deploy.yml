@@ -51,6 +51,7 @@ jobs:
                 push: true
                 tags: |
                     ${{ vars.AWS_ECR_REPO }}:${{ env.IMAGE_TAG }}
+                    ${{vars.AWS_ECR_REPO}}:latest
             
             # migration task
             - name: Download Migration current task definition
