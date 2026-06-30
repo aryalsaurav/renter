@@ -115,3 +115,49 @@ jobs:
                 service: ${{vars.SERVICE_NAME}}
                 cluster: ${{vars.CLUSTER_NAME}}
                 wait-for-service-stability: true
+
+            # celery
+            - name: Download current task definition celery
+              run: |
+                aws ecs describe-task-definition \
+                --task-definition ${{vars.CELERY_TASK_DEFINITION}} \
+                --query taskDefinition > celery-task-definition.json
+            
+            - name: Update task definition with new image for celery
+              id: celery-task-def
+              uses: aws-actions/amazon-ecs-render-task-definition@v1
+              with: 
+                task-definition: celery-task-definition.json
+                container-name: ${{vars.CELERY_CONTAINER_NAME}}
+                image: ${{vars.AWS_ECR_REPO}}:${{ env.IMAGE_TAG }}
+            
+            - name: Update celery Service and deploy
+              uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+              with:
+                task-definition: ${{steps.celery-task-def.outputs.task-definition}}
+                service: ${{vars.CELERY_SERVICE_NAME}}
+                cluster: ${{vars.CLUSTER_NAME}}
+                wait-for-service-stability: true
+            
+            # beat
+            - name: Download current task definition beat
+              run: |
+                aws ecs describe-task-definition \
+                --task-definition ${{vars.BEAT_TASK_DEFINITION}} \
+                --query taskDefinition > beat-task-definition.json
+            
+            - name: Update task definition with new image for beat
+              id: beat-task-def
+              uses: aws-actions/amazon-ecs-render-task-definition@v1
+              with: 
+                task-definition: beat-task-definition.json
+                container-name: ${{vars.BEAT_CONTAINER_NAME}}
+                image: ${{vars.AWS_ECR_REPO}}:${{ env.IMAGE_TAG }}
+            
+            - name: Update Beat Service and deploy
+              uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+              with:
+                task-definition: ${{steps.beat-task-def.outputs.task-definition}}
+                service: ${{vars.BEAT_SERVICE_NAME}}
+                cluster: ${{vars.CLUSTER_NAME}}
+                wait-for-service-stability: true
