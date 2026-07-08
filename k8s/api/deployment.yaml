@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: renter-api
+  namespace: rental
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: renter
+      component: api
+    
+  template:
+    metadata:
+      labels:
+        app: renter
+        component: api
+
+    spec:
+      containers:
+        - name: server
+          image: renter:latest
+          ports:
+            - containerPort: 8000
+          args:
+            - python
+            - manage.py
+            - runserver
+            - 0.0.0.0:8000
