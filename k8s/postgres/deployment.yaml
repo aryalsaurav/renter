@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: rental-api
+  namespace: rental
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: rental-api
+    
+  template:
+    metadata:
+      labels:
+        app: rental-api
+  
+
+    spec:
+      containers:
+        - name: rental-api
+          image: nginx:latest
+          ports:
+            - containerPort: 80
