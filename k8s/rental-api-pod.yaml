@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Pod
+
+metadata:
+  name: rental-api
+  namespace: rental
+
+spec:
+  containers:
+    - name: renter-api
+      image: nginx:latest
+      ports:
+        - containerPort: 80
