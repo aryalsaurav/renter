@@ -25,13 +25,10 @@ spec:
           image: postgres:16
           ports:
             - containerPort: 5432
-          env:
-            - name: POSTGRES_DB
-              value: renter
+          envFrom:
+            - configMapRef:
+                name: renter-config
             
-            - name: POSTGRES_USER
-              value: postgres
-            
-            - name: POSTGRES_PASSWORD
-              value: helloworld
+            - secretRef:
+                name: renter-secret
 
