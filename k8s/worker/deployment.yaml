@@ -31,33 +31,9 @@ spec:
             - worker
             - --loglevel=info
           
-          env:
-            - name: DJANGO_ALLOWED_HOSTS
-              value: localhost
+          envFrom:
+            - configMapRef:
+                name: renter-config
             
-            - name: POSTGRES_HOST
-              value: postgres
-            
-            - name: POSTGRES_DB
-              value: renter
-            
-            - name: POSTGRES_USER
-              value: postgres
-            
-            - name: POSTGRES_PORT
-              value: "5432"
-            
-            - name: POSTGRES_PASSWORD
-              value: helloworld
-            
-            - name: DEBUG
-              value: "True"
-            
-            - name: DJANGO_SECRET_KEY
-              value: "o9vjc$6e@s$_g^$8ud3fl1_%rl7lps*0_^2)thzqiawezx4p(i"
-            
-            - name: REDIS_URL
-              value: redis://redis:6379/0
-            
-            - name: CELERY_BROKER_URL
-              value: redis://redis:6379/0
+            - secretRef:
+                name: renter-secret
