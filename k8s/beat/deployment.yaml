@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 
 metadata:
-  name: rental-api
+  name: worker
   namespace: rental
 
 spec:
@@ -10,17 +10,49 @@ spec:
 
   selector:
     matchLabels:
-      app: rental-api
+      app: renter
+      component: worker
     
   template:
     metadata:
       labels:
-        app: rental-api
-  
+        app: renter
+        component: worker
 
     spec:
       containers:
-        - name: rental-api
-          image: nginx:latest
-          ports:
-            - containerPort: 80
+        - name: worker
+          image: renter:latest
+          args:
+            - celery -A
+            - config.celery
+            - beat
+            - --loglevel=info
+          
+          env:
+            - name: DJANGO_ALLOWED_HOSTS
+              value: localhost
+            
+            - name: POSTGRES_HOST
+              value: postgres
+            
+            - name: POSTGRES_DB
+              value: renter
+            
+            - name: POSTGRES_USER
+              value: postgres
+            
+            - name: POSTGRES_PORT
+              value: "5432"
+            
+            - name: DEBUG
+              value: "False"
+            
+            - name: DJANGO_SECRET_KEY
+              value: "o9vjc$6e@s$_g^$8ud3fl1_%rl7lps*0_^2)thzqiawezx4p(i"
+            
+            - name: REDIS_URL
+              value: redis://redis:6379/0
+            
+            - name: CELERY_BROKER_URL
+              value: redis://redis:6379/0

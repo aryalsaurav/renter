@@ -19,20 +19,19 @@ spec:
         app: renter
         component: db
   
-
-  containers:
-    name: db
-    image: postgres:16
-    ports:
-      - containerPort: 5432
-    
-    env:
-      - name: POSTGRES_DB
-        value: renter
-      
-      - name: POSTGRES_USER
-        value: postgres
-      
-      - name: POSTGRES_PASSWORD
-        value: helloworld
+    spec:
+      containers:
+        - name: db
+          image: postgres:16
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: renter
+            
+            - name: POSTGRES_USER
+              value: postgres
+            
+            - name: POSTGRES_PASSWORD
+              value: helloworld
 
