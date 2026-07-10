@@ -23,8 +23,10 @@ spec:
       containers:
         - name: worker
           image: renter:latest
+          imagePullPolicy: IfNotPresent
           args:
-            - celery -A
+            - celery
+            - -A
             - config.celery
             - worker
             - --loglevel=info

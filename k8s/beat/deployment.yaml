@@ -2,29 +2,31 @@ apiVersion: apps/v1
 kind: Deployment
 
 metadata:
-  name: worker
+  name: beat
   namespace: rental
 
 spec:
-  replicas: 2
+  replicas: 1
 
   selector:
     matchLabels:
       app: renter
-      component: worker
+      component: beat
     
   template:
     metadata:
       labels:
         app: renter
-        component: worker
+        component: beat
 
     spec:
       containers:
-        - name: worker
+        - name: beat
           image: renter:latest
+          imagePullPolicy: IfNotPresent
           args:
-            - celery -A
+            - celery
+            - -A
             - config.celery
             - beat
             - --loglevel=info
