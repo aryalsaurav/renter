@@ -2,25 +2,37 @@ apiVersion: apps/v1
 kind: Deployment
 
 metadata:
-  name: rental-api
+  name: postgres
   namespace: rental
 
 spec:
-  replicas: 2
+  replicas: 1
 
   selector:
     matchLabels:
-      app: rental-api
-    
+      app: renter
+      component: db
+  
   template:
     metadata:
       labels:
-        app: rental-api
+        app: renter
+        component: db
   
 
-    spec:
-      containers:
-        - name: rental-api
-          image: nginx:latest
-          ports:
-            - containerPort: 80
+  containers:
+    name: db
+    image: postgres:16
+    ports:
+      - containerPort: 5432
+    
+    env:
+      - name: POSTGRES_DB
+        value: renter
+      
+      - name: POSTGRES_USER
+        value: postgres
+      
+      - name: POSTGRES_PASSWORD
+        value: helloworld
+
