@@ -2,25 +2,27 @@ apiVersion: apps/v1
 kind: Deployment
 
 metadata:
-  name: rental-api
+  name: redis
   namespace: rental
 
 spec:
-  replicas: 2
+  replicas: 1
 
   selector:
     matchLabels:
-      app: rental-api
+      app: renter
+      component: redis
     
   template:
     metadata:
       labels:
-        app: rental-api
+        app: renter
+        component: redis
   
 
     spec:
       containers:
-        - name: rental-api
-          image: nginx:latest
+        - name: redis
+          image: redis:latest
           ports:
-            - containerPort: 80
+            - containerPort: 6379
