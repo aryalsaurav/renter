@@ -45,8 +45,11 @@ spec:
             - name: POSTGRES_PORT
               value: "5432"
             
+            - name: POSTGRES_PASSWORD
+              value: helloworld
+            
             - name: DEBUG
-              value: "False"
+              value: "True"
             
             - name: DJANGO_SECRET_KEY
               value: "o9vjc$6e@s$_g^$8ud3fl1_%rl7lps*0_^2)thzqiawezx4p(i"
