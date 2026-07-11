@@ -38,3 +38,26 @@ spec:
               
             - secretRef:
                 name: renter-secret
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+            successThreshold: 1
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            
+            periodSeconds: 10
+            failureThreshold: 20
