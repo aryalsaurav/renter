@@ -6,7 +6,7 @@ metadata:
   namespace: rental
 
 data:
-  DEBUG: "True"
+  DJANGO_DEBUG: "True"
   DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1"
 
   POSTGRES_DB: renter
