@@ -1,11 +1,12 @@
 """Template (session-auth) views for accounts."""
+import time
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView, LogoutView
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
-
+from django.http import JsonResponse
 from apps.accounts.forms import EmailAuthenticationForm, ProfileForm, SignupForm
 
 
@@ -47,3 +48,12 @@ def profile_view(request):
     else:
         form = ProfileForm(instance=profile)
     return render(request, "accounts/profile.html", {"form": form})
+
+
+def burn_cpu(request):
+    end = time.time() + 5
+
+    while time.time() < end:
+        pass
+
+    return JsonResponse({"message": "CPU burned for 5 seconds"})
