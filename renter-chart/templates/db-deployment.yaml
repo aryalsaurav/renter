@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: db
+  namespace: rental
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: renter
+      component: db
+
+  template:
+    labels:
+      app: renter
+      component: db
+    
+    spec:
+      containers:
+        name: postgres
+        image: postgres:18
+        ports:
+          - containerPort: 5432
+        envFrom:
+          configMapRef:
+            name: renter-config
+          secretRef:
+            name: renter-secret
+        volumeMounts:
+          name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+
+      volumes:
+        - name: postgres-storage
+          persistantVolumeClaim:
+            claimName: postgres-pvc
+
+

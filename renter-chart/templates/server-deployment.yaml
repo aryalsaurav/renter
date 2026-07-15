@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: server
+  namespace: rental
+
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 2
+      maxUnavailable: 1
+
+
+  selector:
+    matchLabels:
+      app: renter
+      component: server
+
+
+  template:
+    lables:
+      app: renter
+      component: server
+
+    spec:
+      containers:
+        name: server
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 8000
+        args:
+          - python
+          - manage.py 
+          - runserver
+          - 0.0.0.0:8000
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: 1
+            memory: "2Gi"
+        envFrom:
+          configMapRef:
+            name: renter-config
+          secretRef:
+            name: renter-secret
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          periodSeconds: 10
+          timeoutSeconds: 2
+          successThreshold: 1
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          periodSeconds: 10
+          failureThreshold: 20
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          periodSeconds: 10
+          timeoutSeconds: 2
+          failureThreshold: 3
+
+
+
