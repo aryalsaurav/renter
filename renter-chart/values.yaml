@@ -18,6 +18,8 @@ config:
 
 maxSurge: 2
 maxUnavailable: 1
+minReplicas: 2
+maxReplicas: 10
 
 
   
