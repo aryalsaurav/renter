@@ -13,15 +13,16 @@ spec:
       component: redis
 
   template:
-    labels:
-      app: renter
-      component: redis
+    metadata:
+      labels:
+        app: renter
+        component: redis
 
     spec:
       containers:
-        name: redis
-        image: redis:latest
-        ports:
-          - containerPort: 6379
+        - name: redis
+          image: redis:latest
+          ports:
+            - containerPort: 6379
 
 
