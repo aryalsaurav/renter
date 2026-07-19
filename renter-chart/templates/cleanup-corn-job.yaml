@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: CronJob
+
+metadata:
+  name: cleanup
+  namespace: rental
+
+spec:
+  schedule: "0 2 * * *"
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: cleanup
+              image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+              imagePullPolicy: IfNotPresent
+              args:
+                - python
+                - manage.py
+                - clearsessions
+              envFrom:
+                - configMapRef:
+                    name: {{ .Release.Name }}-config
+                - secretRef:
+                    name: {{ .Release.Name }}-secret
+
+

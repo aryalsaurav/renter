@@ -1,0 +1,43 @@
+---
+# service Account
+apiVersion: v1
+kind: ServiceAccount
+
+metadata:
+  name: api
+  namespace: rental
+
+---
+# role
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+
+metadata:
+  name: pod-reader
+  namespace: rental
+
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+
+
+---
+# role binding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+
+metadata:
+  name: api-pod-read-access
+  namespace: rental
+
+
+subjects:
+  - kind: ServiceAccount
+    name: api
+    namespace: rental
+
+roleRef:
+  kind: Role
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io
