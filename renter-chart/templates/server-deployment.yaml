@@ -27,6 +27,7 @@ spec:
         component: server
 
     spec:
+      serviceAccountName: api
       containers:
         - name: server
           image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
