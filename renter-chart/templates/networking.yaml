@@ -79,6 +79,11 @@ spec:
       ports:
         - port: 6379
           protocol: TCP
+
+    - to:
+      ports:
+        - {port: 53, protocol: UDP}
+        - {port: 53, protocol: TCP}
   ingress:
     - from:
         - namespaceSelector:
