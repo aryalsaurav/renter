@@ -20,6 +20,8 @@ spec:
         component: db
     
     spec:
+      nodeSelector:
+        role: database
       containers:
         - name: postgres
           image: postgres:18
