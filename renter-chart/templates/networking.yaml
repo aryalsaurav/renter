@@ -1,0 +1,94 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+
+metadata:
+  name: redis-policy
+  namespace: rental
+
+spec:
+  podSelector:
+    matchLabels:
+      app: renter
+      component: redis
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: renter
+              component: server
+
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+
+metadata:
+  name: postgres-policy
+  namespace: rental
+
+spec:
+  podSelector:
+    matchLabels:
+      app: renter
+      component: db
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: renter
+              component: server
+    - from:
+        - podSelector:
+            matchLabels:
+              app: renter
+              role: migration
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+
+metadata:
+  name: server-policy
+  namespace: rental
+
+spec:
+  podSelector:
+    matchLabels:
+      app: renter
+      component: server
+  policyTypes:
+    - Egress
+    - Ingress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: renter
+              component: db
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to:
+        - podSelector:
+            matchLabels:
+              app: renter
+              component: redis
+      ports:
+        - port: 6379
+          protocol: TCP
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: ingress-nginx
+              app.kubernetes.io/component: controller
+      ports:
+        - port: 8000
+          protocol: TCP
+

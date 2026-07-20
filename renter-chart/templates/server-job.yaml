@@ -12,6 +12,10 @@ spec:
   backoffLimit: 3
   ttlSecondsAfterFinished: 100
   template:
+    metadata:
+      labels:
+        app: renter
+        role: migration
     spec:
       restartPolicy: Never
       containers:
