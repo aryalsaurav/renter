@@ -27,16 +27,14 @@ spec:
         component: server
 
     spec:
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app: renter
-                    component: server
-                topologyKey: kubernetes.io/hostname
+      topologySpreadConstraints:
+        - maxSkew: {{ .Values.maxSkew }}
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: renter
+              component: server
       serviceAccountName: api
       containers:
         - name: server
