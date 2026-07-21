@@ -46,6 +46,11 @@ spec:
             matchLabels:
               app: renter
               role: migration
+    - from:
+        - podSelector:
+            matchLabels:
+              app: renter
+              role: cleanup-job
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
