@@ -19,6 +19,16 @@ spec:
         component: redis
 
     spec:
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: renter
+                    component: server
+                topologyKey: kubernetes.io/hostname
       containers:
         - name: redis
           image: redis:latest

@@ -20,8 +20,16 @@ spec:
         component: db
     
     spec:
-      nodeSelector:
-        role: database
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 99
+              preference:
+                matchExpressions:
+                  - key: role
+                    operator: In
+                    values:
+                      - database
       containers:
         - name: postgres
           image: postgres:18

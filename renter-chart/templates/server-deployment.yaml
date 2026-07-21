@@ -27,6 +27,16 @@ spec:
         component: server
 
     spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: renter
+                    component: server
+                topologyKey: kubernetes.io/hostname
       serviceAccountName: api
       containers:
         - name: server
