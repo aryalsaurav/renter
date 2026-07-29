@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: {{ .Values.app }}-config
+  namespace: {{ .Values.namespace }}
+
+data:
+  DJANGO_DEBUG: {{ .Values.config.djangoDebug | quote }}
+  DJANGO_ALLOWED_HOSTS: {{ .Values.config.djangoAllowedHosts | quote }}
+  POSTGRES_PORT: "5432"

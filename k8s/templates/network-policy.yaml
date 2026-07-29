@@ -1,0 +1,108 @@
+{{- if .Values.deployment.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+
+metadata:
+  name: api-policy
+  namespace: {{ .Values.namespace }}
+
+spec:
+  podSelector:
+    matchLabels:
+      app: {{ .Values.app }}
+      component: api
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: "10.0.0.0/16"
+      ports:
+        - {port: 8000, protocol: TCP}
+  egress:
+    - ports: 
+        - {port: 53, protocol: TCP}
+        - {port: 53, protocol: UDP}
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+    - to:
+      - ipBlock:
+          cidr: "10.0.0.0/16"
+      ports:
+        - {port: 5432, protocol: TCP}
+        - {port: 6379, protocol: TCP}
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+
+metadata:
+  name: worker-policy
+  namespace: {{ .Values.namespace }}
+
+spec:
+  podSelector:
+    matchLabels:
+      app: {{ .Values.app }}
+      component: worker
+  policyTypes:
+    - Egress
+  egress:
+    - ports: 
+        - {port: 53, protocol: TCP}
+        - {port: 53, protocol: UDP}
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+    - to:
+      - ipBlock:
+          cidr: "10.0.0.0/16"
+      ports:
+        - {port: 5432, protocol: TCP}
+        - {port: 6379, protocol: TCP}
+
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+
+metadata:
+  name: beat-policy
+  namespace: {{ .Values.namespace }}
+
+spec:
+  podSelector:
+    matchLabels:
+      app: {{ .Values.app }}
+      component: beat
+  policyTypes:
+    - Egress
+  egress:
+    - ports: 
+        - {port: 53, protocol: TCP}
+        - {port: 53, protocol: UDP}
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+    - to:
+      - ipBlock:
+          cidr: "10.0.0.0/16"
+      ports:
+        - {port: 5432, protocol: TCP}
+        - {port: 6379, protocol: TCP}
+
+{{- end }}

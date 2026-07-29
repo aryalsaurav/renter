@@ -1,0 +1,42 @@
+namespace: rental
+app: rental
+
+replicas: 2
+image:
+  repositoryUrl: 264595824735.dkr.ecr.ap-south-1.amazonaws.com/rental/backend
+  tag: latest
+  pullPolicy: IfNotPresent
+resources:
+  requests:
+    cpu: "500m"
+    memory: "1Gi"
+  limits:
+    cpu: "1"
+    memory: "2Gi"
+
+workerResources:
+  requests:
+    cpu: "500m"
+    memory: "1Gi"
+  limits:
+    cpu: "1"
+    memory: "2Gi"
+
+config:
+  awsRegion: ap-south-1
+  rdsSecretName: rds!db-15994120-4017-4349-b8bc-4c86ca092347
+  djangoDebug: false
+  djangoAllowedHosts: "localhost,127.0.0.1,rental.aryalsaurav.com.np,affa64179cf094d5885ca940edf948d9-597a320b0ed64014.elb.ap-south-1.amazonaws.com"
+
+maxSurge: 2
+maxUnavailable: 1
+minReplicas: 2
+maxReplicas: 10
+maxSkew: 1
+
+
+deployment:
+  enabled: true
+
+service:
+  enabled: true

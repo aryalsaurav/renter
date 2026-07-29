@@ -12,6 +12,22 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 from django.http import JsonResponse
+from django.db import connections
+from django.db.utils import OperationalError
+
+def readiness(request):
+    try:
+        db_conn = connections["default"]
+        db_conn.cursor()  # forces a real connection
+    except OperationalError:
+        return JsonResponse(
+            {"status": "not ready", "database": "unavailable"},
+            status=503,
+        )
+    return JsonResponse(
+        {"status": "ready", "database": "connected"},
+        status=200,
+    )
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -28,6 +44,7 @@ urlpatterns = [
         name="swagger-ui",
     ),
     path('health/', lambda request: JsonResponse({"status": "OK"})),
+    path('ready/', readiness, name="readiness")
 ]
 
 if settings.DEBUG:

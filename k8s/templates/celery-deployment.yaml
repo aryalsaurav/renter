@@ -1,0 +1,151 @@
+{{- if .Values.deployment.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: worker
+  namespace: {{ .Values.namespace }}
+
+spec:
+  replicas: {{ .Values.replicas }}
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {{ .Values.maxSurge }}
+      maxUnavailable: {{ .Values.maxUnavailable}}
+  
+  selector:
+    matchLabels:
+      app: {{ .Values.app }}
+      component: worker
+    
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.app}}
+        component: worker
+    spec:
+      serviceAccountName: {{ .Values.app }}-api
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: {{ .Values.app }}
+              component: worker
+      containers:
+        - name: worker
+          image: {{ .Values.image.repositoryUrl }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          args:
+            - celery 
+            - -A
+            - config.celery
+            - worker
+            - --loglevel=info
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.app }}-config
+            - secretRef:
+                name: {{ .Values.app }}-secret
+          resources:
+            requests:
+              cpu: {{ .Values.workerResources.requests.cpu }}
+              memory: {{ .Values.workerResources.requests.memory }}
+            limits:
+              cpu: {{ .Values.workerResources.limits.cpu }}
+              memory: {{ .Values.workerResources.limits.memory }}
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - celery -A config.celery inspect ping -d celery@$HOSTNAME
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            timeoutSeconds: 10
+            failureThreshold: 3
+          startupProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - celery -A config.celery inspect ping -d celery@$HOSTNAME
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 30
+{{- end }}
+
+---
+{{- if .Values.deployment.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: beat
+  namespace: {{ .Values.namespace }}
+
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  strategy:
+    type: Recreate
+  
+  selector:
+    matchLabels:
+      app: {{ .Values.app }}
+      component: beat
+    
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.app}}
+        component: beat
+    spec:
+      containers:
+        - name: beat
+          image: {{ .Values.image.repositoryUrl }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          args:
+            - celery 
+            - -A
+            - config.celery
+            - beat
+            - --loglevel=info
+            - --pidfile=/tmp/celerybeat.pid
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.app }}-config
+            - secretRef:
+                name: {{ .Values.app }}-secret
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "200Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - test -f /tmp/celerybeat.pid && ps -p $(cat /tmp/celerybeat.pid)
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            timeoutSeconds: 10
+            failureThreshold: 3
+          startupProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - test -f /tmp/celerybeat.pid
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+{{- end }}

@@ -1,0 +1,38 @@
+{{- if .Values.deployment.enabled }}
+apiVersion: batch/v1
+kind: Job
+
+metadata:
+  name: migration
+  namespace: {{ .Values.namespace }}
+  annotations:
+    "helm.sh/hook": post-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
+
+spec:
+  ttlSecondsAfterFinished: 100
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.app }}
+        role: migration
+    spec:
+      serviceAccountName: {{ .Values.app }}-api
+      restartPolicy: Never
+      containers:
+        - name: migration
+          image: {{ .Values.image.repositoryUrl }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          args:
+            - /bin/sh
+            - -c
+            - |
+              python manage.py migrate --noinput &&
+              python manage.py collectstatic --noinput
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.app }}-config
+            - secretRef:
+                name: {{ .Values.app }}-secret
+
+{{- end }}
