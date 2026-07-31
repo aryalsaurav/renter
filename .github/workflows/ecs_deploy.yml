@@ -1,14 +1,14 @@
 name: ECS Build and Deploy
 
-on:
-    pull_request:
-        branches: [main]
-        types: [closed]
-    push:
-        branches: [main]
+#on:
+#    pull_request:
+#        branches: [main]
+#        types: [closed]
+#    push:
+#        branches: [main]
 
-# on:
-#     workflow_dispatch:
+on:
+     workflow_dispatch:
 
 permissions:
     id-token: write
