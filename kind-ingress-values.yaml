@@ -1,3 +1,4 @@
+# kind-ingress-values.yaml
 controller:
   hostPort:
     enabled: true
@@ -5,3 +6,10 @@ controller:
     type: NodePort
   publishService:
     enabled: false
+  nodeSelector:
+    ingress-ready: "true"
+    kubernetes.io/os: linux
+  tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
