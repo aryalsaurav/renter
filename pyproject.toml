@@ -30,6 +30,7 @@ django-celery-results = "^2.5.1"
 # CORS for API clients
 django-cors-headers = "^4.3.1"
 django-allow-cidr = "^0.8.0"
+django-prometheus = "^2.5.0"
 
 [tool.poetry.group.prod]
 optional = true

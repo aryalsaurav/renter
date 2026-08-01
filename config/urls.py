@@ -44,7 +44,8 @@ urlpatterns = [
         name="swagger-ui",
     ),
     path('health/', lambda request: JsonResponse({"status": "OK"})),
-    path('ready/', readiness, name="readiness")
+    path('ready/', readiness, name="readiness"),
+    path('', include('django_prometheus.urls')),
 ]
 
 if settings.DEBUG:

@@ -43,11 +43,16 @@ spec:
           ports:
             - containerPort: 8000
           args:
-            args:
             - gunicorn
             - config.wsgi:application
             - --bind
             - 0.0.0.0:8000
+            - --workers
+            - 2
+            - --access-logfile
+            - -
+            - error-logfile
+            - -
           resources:
             requests:
               cpu: {{ .Values.resources.requests.cpu }}
