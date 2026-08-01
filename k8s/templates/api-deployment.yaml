@@ -49,9 +49,9 @@ spec:
             - --workers
             - {{ .Values.api.workers | quote }}
             - --access-logfile
-            - -
-            - error-logfile
-            - -
+            - "-"
+            - --error-logfile
+            - "-"
           envFrom:
             - configMapRef:
                 name: {{ .Values.app }}-config

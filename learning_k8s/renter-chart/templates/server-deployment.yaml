@@ -50,9 +50,9 @@ spec:
             - --workers
             - {{ .Values.api.workers | quote }}
             - --access-logfile
-            - -
-            - error-logfile
-            - -
+            - "-"
+            - --error-logfile
+            - "-"
           resources:
             requests:
               cpu: {{ .Values.resources.requests.cpu }}
