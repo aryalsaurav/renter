@@ -2,6 +2,8 @@ namespace: rental
 app: rental
 
 replicas: 2
+api:
+  workers: 2
 image:
   repositoryUrl: 264595824735.dkr.ecr.ap-south-1.amazonaws.com/rental/backend
   tag: latest

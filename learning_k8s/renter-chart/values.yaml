@@ -1,4 +1,6 @@
 replicas: 2
+api:
+  workers: 2
 image:
   repository: renter
   tag: latest

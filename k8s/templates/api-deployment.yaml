@@ -47,7 +47,7 @@ spec:
             - --bind
             - 0.0.0.0:8000
             - --workers
-            - 2
+            - {{ .Values.api.workers | quote }}
             - --access-logfile
             - -
             - error-logfile
