@@ -43,9 +43,10 @@ spec:
           ports:
             - containerPort: 8000
           args:
-            - python
-            - manage.py 
-            - runserver
+            args:
+            - gunicorn
+            - config.wsgi:application
+            - --bind
             - 0.0.0.0:8000
           resources:
             requests:
@@ -59,20 +60,20 @@ spec:
                 name: renter-config
             - secretRef:
                 name: renter-secret
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            periodSeconds: 10
-            timeoutSeconds: 2
-            successThreshold: 1
-            failureThreshold: 3
           startupProbe:
             httpGet:
               path: /health
               port: 8000
             periodSeconds: 10
             failureThreshold: 20
+          readinessProbe:
+              httpGet:
+                path: /ready
+                port: 8000
+              periodSeconds: 10
+              timeoutSeconds: 2
+              successThreshold: 1
+              failureThreshold: 3
           livenessProbe:
             httpGet:
               path: /health
