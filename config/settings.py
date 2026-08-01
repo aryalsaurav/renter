@@ -87,7 +87,7 @@ MIDDLEWARE = [
 
 PROMETHEUS_LATENCY_BUCKETS = (0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0, 25.0, 50.0, 75.0, float("inf"),)
 
-ALLOWED_CIDR_NETS = env.list('ALLOWED_CIDR_NETS', default=["10.0.0.0/16"])
+ALLOWED_CIDR_NETS = env.list('ALLOWED_CIDR_NETS', default=["10.0.0.0/16", "10.244.0.0/16"])
 
 
 ROOT_URLCONF = "config.urls"
