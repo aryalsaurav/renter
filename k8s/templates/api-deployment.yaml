@@ -66,13 +66,13 @@ spec:
               memory: {{ .Values.resources.limits.memory }}
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/
               port: 8000
             periodSeconds: 10
             failureThreshold: 20
           readinessProbe:
               httpGet:
-                path: /ready
+                path: /ready/
                 port: 8000
               periodSeconds: 10
               timeoutSeconds: 2
@@ -80,7 +80,7 @@ spec:
               failureThreshold: 3
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/
               port: 8000
             periodSeconds: 10
             timeoutSeconds: 2
