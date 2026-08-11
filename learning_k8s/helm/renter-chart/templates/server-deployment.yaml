@@ -25,6 +25,7 @@ spec:
       labels:
         app: renter
         component: server
+        prometheus: "true"
 
     spec:
       topologySpreadConstraints:
@@ -42,6 +43,7 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
+              name: django
           args:
             - gunicorn
             - config.wsgi:application
