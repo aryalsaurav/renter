@@ -98,6 +98,12 @@ spec:
             matchLabels:
               app.kubernetes.io/name: ingress-nginx
               app.kubernetes.io/component: controller
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+          podSelector:
+            matchLabels:
+              app: prometheus
       ports:
         - port: 8000
           protocol: TCP

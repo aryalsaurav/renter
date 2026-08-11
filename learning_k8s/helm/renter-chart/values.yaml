@@ -14,7 +14,7 @@ resources:
 
 config:
   djangoDebug: true
-  djangoAllowedHosts: "localhost,127.0.0.1,renter.local"
+  djangoAllowedHosts: "localhost,127.0.0.1,renter.local,server.rental.svc.cluster.local"
   postgresUser: "postgres"
   postgresDb: "renter"
 
