@@ -5,6 +5,14 @@ metadata:
   name: prometheus
   namespace: monitoring
 
+---
+apiVersion: v1
+kind: ServiceAccount
+
+metadata:
+  name: kube-state-metrics
+  namespace: monitoring
+
 
 ---
 
@@ -19,10 +27,61 @@ rules:
       - ""
     resources:
       - pods
+      - services
     verbs:
       - get
       - list
       - watch
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - get
+      - list
+      - watch
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+
+metadata:
+  name: kube-state-metrics
+
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - services
+      - nodes
+    verbs:
+      - get 
+      - list
+      - watch
+
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+      - replicasets
+      - statefulsets
+      - daemonsets
+    verbs:
+      - get
+      - list
+      - watch
+
+  - apiGroups:
+      - batch
+    resources:
+      - jobs
+      - cronjobs
+    verbs:
+      - get
+      - list
+      - watch
+
 
 ---
 
@@ -41,3 +100,22 @@ subjects:
   - kind: ServiceAccount
     name: prometheus
     namespace: monitoring
+
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+
+metadata:
+  name: kube-state-metrics
+
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kube-state-metrics
+
+subjects:
+  - kind: ServiceAccount
+    name: kube-state-metrics
+    namespace: monitoring
+
