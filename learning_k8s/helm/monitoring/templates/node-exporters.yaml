@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: DaemonSet
+
+metadata:
+  name: node-exporter
+  namespace: monitoring
+
+
+spec:
+  selector:
+    matchLabels:
+      app: node-exporter
+
+  template:
+    metadata:
+      labels:
+        app: node-exporter
+    spec:
+      tolerations:
+        - key: "node-role.kubernetes.io/control-plane"
+          operator: "Exists"
+          effect: "NoSchedule"
+      containers:
+        - name: node-exporter
+          image: prom/node-exporter:v1.9.1
+          ports:
+            - name: metrics
+              containerPort: 9100
+
