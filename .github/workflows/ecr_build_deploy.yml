@@ -1,0 +1,53 @@
+name: Build and Deploy 
+
+#on:
+#    pull_request:
+#        branches: [main]
+#        types: [closed]
+#    push:
+#        branches: [main]
+
+on:
+    workflow_dispatch:
+    
+permissions:
+    id-token: write
+    contents: read
+
+concurrency:
+    group: production
+    cancel-in-progress: true
+
+jobs:
+    build-and-deploy:
+        if: >-
+          github.event_name == 'push' ||
+          (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v5
+            - name: configure-aws-creds
+              uses: aws-actions/configure-aws-credentials@v5
+              with:
+                role-to-assume: ${{vars.AWS_DEPLOY_ROLE_ARN}}
+                aws-region: ${{vars.AWS_REGION}}
+            
+            - name: Get aws sts identity
+              run: aws sts get-caller-identity
+            
+            - name: ECR login
+              uses: aws-actions/amazon-ecr-login@v2
+            
+            - name: Store image tag on env
+              run: echo "IMAGE_TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
+            
+            - name: Docker build and push
+              uses: docker/build-push-action@v7
+              with:
+                context: .
+                file: docker/Dockerfile.prod
+                push: true
+                tags: |
+                    ${{ vars.AWS_ECR_REPO }}:${{ env.IMAGE_TAG }}
+                    ${{vars.AWS_ECR_REPO}}:latest
