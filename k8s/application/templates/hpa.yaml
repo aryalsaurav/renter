@@ -1,4 +1,3 @@
-{{- if .Values.deployment.enabled }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 
@@ -27,4 +26,3 @@ spec:
         target:
           type: Utilization
           averageUtilization: 70
-{{- end }}

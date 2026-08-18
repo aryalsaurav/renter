@@ -1,0 +1,7 @@
+image:
+  repositoryUrl: "264595824735.dkr.ecr.ap-south-1.amazonaws.com/renter"
+
+config:
+  rdsSecretName: "rds!db-2b83d38b-1c36-4e84-83eb-9c53922cd9c3"
+  djangoDebug: false
+  djangoAllowedHosts: "rental.aryalsaurav.com.np"

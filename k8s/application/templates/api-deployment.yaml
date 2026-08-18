@@ -1,4 +1,3 @@
-{{- if .Values.deployment.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 
@@ -38,7 +37,7 @@ spec:
       containers:
         - name: api
           image: {{ .Values.image.repositoryUrl }}:{{ .Values.image.tag }}
-          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 8000
           args:
@@ -85,11 +84,8 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 2
             failureThreshold: 3
-{{- end }}
 
 ---
-
-{{- if .Values.service.enabled }}
 apiVersion: v1
 kind: Service
 
@@ -105,4 +101,3 @@ spec:
   - port: 80
     targetPort: 8000
   type: ClusterIP
-{{- end }}
