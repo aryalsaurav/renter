@@ -4,6 +4,8 @@ kind: NetworkPolicy
 metadata:
   name: api-policy
   namespace: {{ .Values.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
 
 spec:
   podSelector:
@@ -44,6 +46,8 @@ kind: NetworkPolicy
 metadata:
   name: worker-policy
   namespace: {{ .Values.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
 
 spec:
   podSelector:
@@ -78,6 +82,8 @@ kind: NetworkPolicy
 metadata:
   name: beat-policy
   namespace: {{ .Values.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
 
 spec:
   podSelector:

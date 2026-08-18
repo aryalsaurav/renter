@@ -4,6 +4,8 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: api-hpa
   namespace: {{ .Values.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 
 spec:
   scaleTargetRef:
