@@ -5,4 +5,4 @@ config:
   rdsSecretName: "rds!db-2b83d38b-1c36-4e84-83eb-9c53922cd9c3"
   djangoDebug: false
   djangoAllowedHosts: "rental.aryalsaurav.com.np"
-  secretName: renter-dev
+  secretPath: renter-dev
