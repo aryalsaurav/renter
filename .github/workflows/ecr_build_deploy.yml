@@ -52,15 +52,16 @@ jobs:
                 tags: |
                     ${{ vars.AWS_ECR_REPO }}:${{ env.IMAGE_TAG }}
                     ${{vars.AWS_ECR_REPO}}:latest
-
-            - name: Update Gitops image
+            - name: Update GitOps image
+              env:
+                AWS_ECR_REPO: ${{ vars.AWS_ECR_REPO }}
               run: |
-                sed -i "s|^  repositoryUrl:.*|  repositoryUrl: \"${AWS_ECR_REPO}\"|" k8s/application/values-prod.yaml
-                sed -i "s/^  tag: .*/  tag: \"${IMAGE_TAG}\"/" k8s/application/values-prod.yaml
+                yq -i ".image.repositoryUrl = strenv(AWS_ECR_REPO) | .image.tag = \"${IMAGE_TAG}\"" \
+                  k8s/application/values-prod.yaml
 
                 git config user.name "github-actions[bot]"
                 git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
                 git add k8s/application/values-prod.yaml
                 git commit -m "deploy renter:${IMAGE_TAG}"
+                git pull --rebase
                 git push
