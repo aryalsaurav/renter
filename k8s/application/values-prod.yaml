@@ -4,5 +4,5 @@ image:
 config:
   rdsSecretName: "rds!db-2b83d38b-1c36-4e84-83eb-9c53922cd9c3"
   djangoDebug: false
-  djangoAllowedHosts: "rental.aryalsaurav.com.np"
+  djangoAllowedHosts: "a1f6e3443b979406e9e2f46018d69609-d49cc1366aed6668.elb.ap-south-1.amazonaws.com"
   secretPath: renter-dev
