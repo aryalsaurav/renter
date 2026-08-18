@@ -4,6 +4,8 @@ kind: Deployment
 metadata:
   name: worker
   namespace: {{ .Values.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 
 spec:
   replicas: {{ .Values.replicas }}
@@ -85,6 +87,8 @@ kind: Deployment
 metadata:
   name: beat
   namespace: {{ .Values.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 
 spec:
   replicas: 1

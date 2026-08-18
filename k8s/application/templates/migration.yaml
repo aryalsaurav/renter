@@ -9,7 +9,7 @@ metadata:
   #   "helm.sh/hook-delete-policy": before-hook-creation
 
   annotations:
-    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/sync-wave: "0"
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 
 spec:
