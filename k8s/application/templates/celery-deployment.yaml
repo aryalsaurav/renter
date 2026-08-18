@@ -36,7 +36,7 @@ spec:
               component: worker
       containers:
         - name: worker
-          image: {{ .Values.image.repositoryUrl }}:{{ .Values.image.tag }}
+          image: "{{ .Values.image.repositoryUrl }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - celery 
@@ -105,7 +105,7 @@ spec:
     spec:
       containers:
         - name: beat
-          image: {{ .Values.image.repositoryUrl }}:{{ .Values.image.tag }}
+          image: "{{ .Values.image.repositoryUrl }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - celery 

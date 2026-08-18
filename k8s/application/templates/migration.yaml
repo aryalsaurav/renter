@@ -20,8 +20,8 @@ spec:
       restartPolicy: Never
       containers:
         - name: migration
-          image: {{ .Values.image.repositoryUrl }}:{{ .Values.image.tag }}
-          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          image: "{{ .Values.image.repositoryUrl }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - /bin/sh
             - -c

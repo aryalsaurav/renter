@@ -36,15 +36,15 @@ spec:
       serviceAccountName: {{ .Values.app }}-api
       containers:
         - name: api
-          image: {{ .Values.image.repositoryUrl }}:{{ .Values.image.tag }}
+          image: "{{ .Values.image.repositoryUrl }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 8000
           args:
             - gunicorn
-            - config.wsgi:application
+            - "config.wsgi:application"
             - --bind
-            - 0.0.0.0:8000
+            - "0.0.0.0:8000"
             - --workers
             - {{ .Values.api.workers | quote }}
             - --access-logfile
