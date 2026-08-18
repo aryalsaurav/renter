@@ -18,7 +18,7 @@ spec:
   ingress:
     - from:
         - ipBlock:
-            cidr: "10.0.0.0/16"
+            cidr: {{ .Values.config.cidr_block | quote }}
       ports:
         - {port: 8000, protocol: TCP}
   egress:
@@ -34,7 +34,7 @@ spec:
               k8s-app: kube-dns
     - to:
       - ipBlock:
-          cidr: "10.0.0.0/16"
+          cidr: {{ .Values.config.cidr_block | quote }}
       ports:
         - {port: 5432, protocol: TCP}
         - {port: 6379, protocol: TCP}
@@ -69,7 +69,7 @@ spec:
               k8s-app: kube-dns
     - to:
       - ipBlock:
-          cidr: "10.0.0.0/16"
+          cidr: {{ .Values.config.cidr_block | quote }}
       ports:
         - {port: 5432, protocol: TCP}
         - {port: 6379, protocol: TCP}
@@ -105,7 +105,7 @@ spec:
               k8s-app: kube-dns
     - to:
       - ipBlock:
-          cidr: "10.0.0.0/16"
+          cidr: {{ .Values.config.cidr_block | quote }}
       ports:
         - {port: 5432, protocol: TCP}
         - {port: 6379, protocol: TCP}

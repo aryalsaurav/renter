@@ -37,3 +37,4 @@ maxSkew: 1
 
 config:
   awsRegion: ap-south-1
+  cidr_block: "10.20.0.0/16"
