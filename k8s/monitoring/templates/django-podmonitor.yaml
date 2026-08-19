@@ -1,0 +1,24 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+
+metadata:
+  name: api-monitor
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+
+spec:
+  namespaceSelector:
+    matchNames:
+      - renter
+
+  selector:
+    matchLabels:
+      app: {{ .Values.renter.app}}
+      component: api
+      prometheus: "true"
+
+  podMetricsEndpoints:
+    - port: {{ .Values.renter.api.portName }}
+      path: /metrics
+      interval: 15s

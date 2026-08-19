@@ -1,0 +1,5 @@
+renter:
+  app: renter
+  server:
+    portName: django
+
