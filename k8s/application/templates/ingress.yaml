@@ -9,7 +9,8 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - http:
+    - host: renter.aryalsaurav.com.np
+      http:
         paths:
           - pathType: Prefix
             path: "/"
