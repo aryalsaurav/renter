@@ -4,6 +4,8 @@ kind: Ingress
 metadata:
   name: {{.Values.app }}-ingress
   namespace: {{ .Values.namespace }}
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-staging
 
 
 spec:
