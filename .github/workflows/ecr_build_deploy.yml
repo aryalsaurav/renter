@@ -1,22 +1,26 @@
 name: Build and Deploy ECR
 
-#on:
-#    pull_request:
-#        branches: [main]
-#        types: [closed]
-#    push:
-#        branches: [main]
+# on:
+#   pull_request:
+#       branches: [main]
+#       types: [closed]
+#   push:
+#       branches: [main]
+#       paths-ignore:
+#         - 'k8s/**'
+
+
 
 on:
-    workflow_dispatch:
+  workflow_dispatch:
     
 permissions:
-    id-token: write
-    contents: write
+  id-token: write
+  contents: write
 
 concurrency:
-    group: production
-    cancel-in-progress: true
+  group: production
+  cancel-in-progress: true
 
 jobs:
     build-and-deploy:
