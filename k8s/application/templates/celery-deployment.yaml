@@ -46,6 +46,7 @@ spec:
             - config.celery
             - worker
             - --loglevel=info
+            - --pidfile=/tmp/celery.pid
           envFrom:
             - configMapRef:
                 name: {{ .Values.app }}-config
@@ -63,7 +64,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - kill -0 $(cat /tmp/celerybeat.pid)
+                - kill -0 $(cat /tmp/celery.pid)
             initialDelaySeconds: 30
             periodSeconds: 60
             timeoutSeconds: 10
