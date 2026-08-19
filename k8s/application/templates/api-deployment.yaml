@@ -26,6 +26,7 @@ spec:
       labels:
         app: {{ .Values.app}}
         component: api
+        prometheus: "true"
     spec:
       topologySpreadConstraints:
         - maxSkew: 1
