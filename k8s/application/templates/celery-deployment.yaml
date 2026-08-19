@@ -6,6 +6,7 @@ metadata:
   namespace: {{ .Values.namespace }}
   annotations:
     argocd.argoproj.io/sync-wave: "1"
+    reloader.stakater.com/auto: "true"
 
 spec:
   replicas: {{ .Values.replicas }}
@@ -80,6 +81,7 @@ metadata:
   namespace: {{ .Values.namespace }}
   annotations:
     argocd.argoproj.io/sync-wave: "1"
+    reloader.stakater.com/auto: "true"
 
 spec:
   replicas: 1
