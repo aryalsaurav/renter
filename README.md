@@ -1,215 +1,120 @@
-# Renter 🏠
+# Renter 🏠 — Cloud-Native Rental Platform on AWS EKS
 
-A Django rental-listing platform where **anyone can browse available houses and
-apartments without logging in** — they see photos and location details, but the
-**owner's contact info stays hidden**. To publish a listing you must create an
-account and log in; submissions are validated and moderated.
+A production-grade rental-listing platform deployed on **AWS EKS** with **Terraform**, **ArgoCD GitOps**, and a full **Prometheus / Grafana / Loki** observability stack.
 
-Everything is exposed **twice**:
+Anyone can browse published houses and apartments without logging in — photos and location are public, but the owner's contact info stays hidden until you sign in. Listings from unverified users go through a moderation queue before publishing.
 
-- a **JSON API** (DRF) secured with **JWT** authentication, and
-- server-rendered **Django templates** secured with **session/cookie** auth.
+The application itself is Django (DRF + JWT API, server-rendered templates, Celery workers) — but the main focus of this project is the **infrastructure, CI/CD, and GitOps delivery pipeline** around it.
 
-## Stack
+## The three repos
 
-| Concern            | Tech                                             |
-| ------------------ | ------------------------------------------------ |
-| Web framework      | Django 5                                         |
-| API                | Django REST Framework + SimpleJWT + drf-spectacular |
-| Database           | PostgreSQL                                        |
-| Cache / broker     | Redis                                             |
-| Async tasks        | Celery + Celery Beat (`django-celery-beat`)       |
-| Media (local)      | Local filesystem                                  |
-| Media (prod)       | AWS S3 (`django-storages` + `boto3`)              |
-| Static (prod)      | WhiteNoise                                         |
-| Packaging          | Poetry                                            |
-| Tests              | pytest + pytest-django + factory-boy              |
-| Containers         | Docker + Docker Compose (separate local & prod)   |
+| Repo | Role |
+| --- | --- |
+| [`renter`](https://github.com/aryalsaurav/renter) (this repo) | Django application, Dockerfiles, GitHub Actions CI/CD, and the application **Helm chart** (`k8s/`) that ArgoCD deploys |
+| [`renter-terraform`](https://github.com/aryalsaurav/renter-terraform) | **Terraform** — modular IaC for the entire AWS footprint: VPC, EKS, RDS, ElastiCache, ECR, S3, IAM, security groups, Secrets Manager, plus the ArgoCD Helm release that bootstraps GitOps |
+| [`renter-infra`](https://github.com/aryalsaurav/renter-infra) | **GitOps source of truth** — ArgoCD app-of-apps: platform add-ons (ingress-nginx, cert-manager, external-secrets, storage) and the monitoring stack (kube-prometheus-stack, Loki, Alloy) |
 
-## Project layout
+## Architecture
 
 ```
-renter/
-├── config/                     # Django project (settings, urls, celery, wsgi)
-│   ├── settings/{base,local,prod,test}.py
-│   ├── urls.py                 # template routes + /api/ + /api/docs/
-│   ├── api_urls.py             # API root (JWT endpoints + app routers)
-│   └── celery.py
-├── apps/
-│   ├── accounts/               # custom email user, profiles, auth
-│   │   ├── api/{serializers,views,urls}.py   # JWT API
-│   │   ├── views.py urls.py forms.py         # session/template
-│   │   └── tests/
-│   └── listings/               # the core rental domain
-│       ├── api/{serializers,views,urls,permissions,filters}.py
-│       ├── views.py urls.py forms.py tasks.py admin.py
-│       └── tests/
-├── templates/                  # Bootstrap-based UI
-├── docker/{local,prod}/django/ # Dockerfiles + start scripts
-├── docker-compose.local.yml
-├── docker-compose.prod.yml
-├── scripts/                    # run / migrate helpers
-├── .env / .env.example         # local env
-└── .env.prod.sample.txt        # production env sample
+                        ┌─────────────────────────────────────────────────┐
+                        │                   AWS (Terraform)               │
+                        │                                                 │
+  GitHub Actions ──────▶│  ECR ◀── image push (OIDC, no static keys)      │
+   (CI/CD, OIDC)        │                                                 │
+        │               │  ┌───────────────── EKS ─────────────────────┐  │
+        │ yq bumps      │  │                                            │  │
+        │ Helm values   │  │  ArgoCD ── app-of-apps ── renter-infra     │  │
+        ▼               │  │    │                                       │  │
+  renter repo ─────────▶│  │    ├─ ingress-nginx ── cert-manager (ACME) │  │
+  (k8s/ Helm chart)     │  │    ├─ external-secrets ── Secrets Manager  │  │
+                        │  │    ├─ kube-prometheus-stack (Grafana)      │  │
+                        │  │    ├─ Loki + Alloy (logs, DaemonSet)       │  │
+                        │  │    └─ renter app (API, Celery, HPA, Jobs)  │  │
+                        │  └────────────────────────────────────────────┘  │
+                        │                                                 │
+                        │  RDS PostgreSQL   ElastiCache Redis   S3        │
+                        └─────────────────────────────────────────────────┘
 ```
 
-Imports use absolute paths (e.g. `from apps.listings.api.serializers import ...`).
+## Infrastructure — `renter-terraform`
 
-## How visibility & permissions work
+Modular Terraform with per-environment roots (`environments/dev`) composing reusable modules:
 
-- **Anonymous visitor** — can browse/search published+available listings and open
-  a detail page (photos + location). `owner_contact` is `null` in the API and the
-  template shows a "Log in to view" lock.
-- **Authenticated user** — everything above **plus** owner contact details, and
-  can create listings.
-- **Owner** — can edit/delete only their own listings (`IsOwnerOrReadOnly`).
-- **Moderation/validation** — new listings from *unverified* users go to a
-  `pending` queue (a Celery task emails moderators); *verified* owners publish
-  instantly. Admins approve/reject from the dashboard.
+- **`vpc`** — public/private subnets, single NAT gateway for cost control
+- **`eks`** — EKS cluster with `API` authentication mode, access entries instead of `aws-auth`, managed node group behind a custom launch template, core add-ons incl. the `eks-pod-identity-agent`, and **Pod Identity associations** binding IAM roles to the EBS CSI, External Secrets, and app service accounts
+- **`iam`** — least-privilege roles for cluster, nodes, EBS CSI, External Secrets (EKS Pod Identity), S3 access, and a **GitHub OIDC deploy role** scoped to `repo:<org>/<repo>:ref:refs/heads/main` so CI never holds long-lived AWS keys
+- **`databases`** — RDS PostgreSQL (managed master-user secret, multi-AZ/backup/deletion-protection toggles) and ElastiCache Redis replication group
+- **`ecr`**, **`s3`**, **`secrets`**, **`security`** — image registry, media bucket, application secret in Secrets Manager, and security groups wiring EKS nodes ⇄ RDS ⇄ Redis
 
-| Surface  | Auth            | Login                          |
-| -------- | --------------- | ------------------------------ |
-| Templates| Session + CSRF  | `/accounts/login/`             |
-| API      | JWT (Bearer)    | `POST /api/auth/token/`        |
+Terraform also installs **ArgoCD via the Helm provider** as the last step — after `terraform apply`, one `kubectl apply` of the root Application bootstraps everything else.
 
-## Quick start — Local (Docker)
+## GitOps — `renter-infra`
 
-Requires Docker + Docker Compose.
+ArgoCD **app-of-apps**: a single root `Application` points at `argocd/applications/`, and every platform component is itself an ArgoCD `Application` with automated sync (`prune` + `selfHeal`):
+
+- **`ingress-nginx`** — cluster ingress, plus Ingress objects for ArgoCD and Grafana
+- **`cert-manager`** — Let's Encrypt staging + prod `ClusterIssuer`s (HTTP-01)
+- **`external-secrets`** — External Secrets Operator with a `ClusterSecretStore` backed by **AWS Secrets Manager** (auth via EKS Pod Identity); the app's `ExternalSecret` pulls the RDS master-user secret and application secrets into the cluster with a 1h refresh
+- **`storage`** — default **gp3** StorageClass
+- **`kube-prometheus-stack`** — Prometheus (15d retention, 20Gi gp3 PVC) + **Grafana** (persistent dashboards)
+- **`loki` + `alloy`** — Loki single-binary with retention/compaction configured, and Grafana **Alloy as a DaemonSet** discovering and relabeling pod logs cluster-wide
+- **`renter`** — the application itself, deployed from the Helm chart in the `renter` repo with `values.yaml` + `values-prod.yaml`
+
+## Application deployment — `renter/k8s`
+
+The Helm chart deploys the API and Celery workers with production concerns handled in-chart:
+
+- **Sync-wave ordering** — ServiceAccount/secrets (wave −1) → **migration Job** (wave 0, `BeforeHookCreation` delete policy) → deployments → HPA (wave 2), so migrations always run before new pods roll
+- **HPA** on CPU + memory (70% target)
+- **NetworkPolicies** restricting API pods to DNS, Postgres (5432), and Redis (6379) egress
+- **ExternalSecret** instead of raw Kubernetes secrets
+- **PodMonitor** scraping Django's `/metrics` every 15s into Prometheus
+
+## CI/CD — GitHub Actions
+
+- **CI** (`ci.yml`) — flake8 + pytest with Postgres/Redis services on every PR to `dev`/`main`
+- **CD to EKS** (`ecr_build_deploy.yml`) — on merge to `main`:
+  1. Assume the AWS deploy role via **GitHub OIDC federation** (`id-token: write`, no stored credentials)
+  2. Build the prod image and push to **ECR** tagged with the short SHA
+  3. **`yq`-bump** `image.tag` in `k8s/application/values-prod.yaml` and commit it back — ArgoCD detects the change and rolls out the new version (pull-based GitOps; CI never touches the cluster)
+- Legacy workflows (`cd.yml`, `ecs_deploy.yml`) for the earlier GHCR + EC2/ECS deployment path are kept for reference
+
+## Observability
+
+- **Metrics** — kube-prometheus-stack; Django exposes `/metrics`, scraped via PodMonitor; Grafana persisted on gp3 and exposed through ingress
+- **Logs** — Alloy DaemonSet ships all pod logs to Loki (7d retention, compactor enabled), queried from Grafana alongside metrics
+- **Alerting-ready** — Alertmanager ships with the stack
+
+## Application (brief)
+
+Django 5 · DRF + SimpleJWT + drf-spectacular · PostgreSQL · Redis · Celery + Beat · S3 media (`django-storages`) · WhiteNoise static · Poetry · pytest + factory-boy
+
+Two surfaces over the same domain: a JWT-secured JSON API and session-secured server-rendered templates. Owners manage only their own listings (`IsOwnerOrReadOnly`); unverified users' listings enter a `pending` moderation queue (Celery emails moderators).
+
+## Local development
 
 ```bash
-# 1. Create your local env file (defaults work out of the box)
 cp .env.example .env
-
-# 2. Build and start everything (web + worker + beat + postgres + redis)
-./scripts/local.sh
+./scripts/local.sh        # web + worker + beat + postgres + redis via Docker Compose
 ```
 
-Then open:
+- App: http://localhost:8000/ · Admin: http://localhost:8000/admin/ · API docs: http://localhost:8000/api/docs/
 
-- App (templates): http://localhost:8000/
-- Admin dashboard: http://localhost:8000/admin/  (default `admin@renter.local` / `admin12345`)
-- API docs (Swagger): http://localhost:8000/api/docs/
-
-The local web container automatically runs `makemigrations`, `migrate`,
-`collectstatic`, and creates the superuser from `DJANGO_SUPERUSER_*`.
-Media files are written to the local `media/` volume.
-
-## Quick start — Production (Docker)
-
-Production stores media on **AWS S3** and serves static files with WhiteNoise
-behind an Nginx reverse proxy.
+## Deploying from scratch
 
 ```bash
-# 1. Create the production env file from the sample and fill in real secrets
-cp .env.prod.sample.txt .env.prod
-$EDITOR .env.prod          # set SECRET_KEY, DB creds, AWS keys, SMTP, hosts...
+# 1. Provision AWS + EKS + ArgoCD
+cd renter-terraform/environments/dev
+terraform init && terraform apply
 
-# 2. Build images and start the stack (NO migrations are run here)
-./scripts/prod.sh
+# 2. Bootstrap GitOps (everything else is pulled by ArgoCD)
+kubectl apply -f renter-infra/repo-secret.yaml        # repo credentials
+kubectl apply -f renter-infra/argocd/root-application.yaml
 
-# 3. Run migrations as a separate, deliberate release step
-./scripts/migrate_prod.sh
-
-# 4. Create an admin user
-./scripts/createsuperuser_prod.sh
+# 3. Ship code — merge to main; CI builds → ECR → yq bump → ArgoCD rollout
 ```
 
-> The production web `start.sh` intentionally **does not run migrations** —
-> only `collectstatic` + Gunicorn. Apply schema changes explicitly with
-> `scripts/migrate_prod.sh` during a controlled release.
+## What this project demonstrates
 
-App is served by Nginx on port 80 → Gunicorn.
-
-## API reference
-
-Auth:
-
-```bash
-# Register
-curl -X POST http://localhost:8000/api/auth/register/ \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"me@example.com","password":"strongpass123!","password2":"strongpass123!"}'
-
-# Obtain JWT
-curl -X POST http://localhost:8000/api/auth/token/ \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"me@example.com","password":"strongpass123!"}'
-```
-
-Key endpoints:
-
-| Method | Path                                | Auth        | Purpose                          |
-| ------ | ----------------------------------- | ----------- | -------------------------------- |
-| GET    | `/api/listings/`                    | public      | browse/search published listings |
-| GET    | `/api/listings/{slug}/`             | public      | detail (owner contact hidden)    |
-| POST   | `/api/listings/`                    | JWT         | create a listing                 |
-| PATCH  | `/api/listings/{slug}/`             | JWT (owner) | update own listing               |
-| DELETE | `/api/listings/{slug}/`             | JWT (owner) | delete own listing               |
-| GET    | `/api/listings/mine/`               | JWT         | the caller's own listings        |
-| POST   | `/api/listings/{slug}/images/`      | JWT (owner) | upload an image                  |
-| GET/PATCH | `/api/auth/me/`                  | JWT         | self profile                     |
-
-Filters/search: `?city=`, `?property_type=`, `?min_rent=`, `?max_rent=`,
-`?min_bedrooms=`, `?search=`, `?ordering=monthly_rent`.
-
-## Background tasks (Celery + Beat)
-
-- `notify_new_listing` — emails moderators when an unverified owner submits.
-- `notify_listing_status_change` — emails the owner on approve/reject.
-- `deactivate_stale_pending_listings` — **beat**, daily 03:00: auto-rejects
-  listings stuck pending > 30 days.
-- `daily_listing_digest` — **beat**, daily 08:00: logs published count.
-
-## Running tests
-
-```bash
-poetry install --with dev
-poetry run pytest
-```
-
-Tests run against fast in-memory SQLite (`config.settings`) with Celery in
-eager mode — no Postgres/Redis needed. 33 tests cover models, tasks, the JWT API
-(including the public/owner visibility rules), and the session-auth templates.
-
-## Local development without Docker
-
-```bash
-poetry install --with dev
-# Make sure Postgres + Redis are running and .env points at them, then:
-poetry run python manage.py migrate
-poetry run python manage.py runserver
-```
-
-
-## Deployment Flow build
-IAM
-- OIDC Provider
-- GitHub Deploy Role
-- ECS Task Execution Role
-- S3Role
-
-Networking
-- VPC
-- Public Subnets
-- Private Subnets
-- Internet Gateway
-- NAT Gateway
-- Route Tables
-
-Load Balancing
-- ALB
-- Target Group
-
-Compute
-- Launch Template
-- Auto Scaling Group
-
-ECS
-- Cluster
-- Service
-- Task Definitions
-
-Storage
-- ECR
-- S3
-- Database
+Modular Terraform on AWS · EKS with access entries & Pod Identity · pull-based GitOps with ArgoCD app-of-apps · keyless CI/CD via GitHub OIDC · External Secrets + AWS Secrets Manager · cert-manager TLS automation · Prometheus/Grafana/Loki/Alloy observability · Helm charts with sync waves, HPA, and NetworkPolicies
