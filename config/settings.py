@@ -322,6 +322,8 @@ else:
                 "bucket_name": AWS_STORAGE_BUCKET_NAME,
                 "region_name": AWS_S3_REGION_NAME,
                 "location": "static",
+                "querystring_auth": False,
+                "default_acl": None,
             },
         },
     }
@@ -368,3 +370,7 @@ else:
             send_default_pii=False,
             environment="production",
         )
+
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024   
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
