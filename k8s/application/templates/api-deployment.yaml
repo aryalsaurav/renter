@@ -6,7 +6,7 @@ metadata:
   namespace: {{ .Values.namespace }}
   annotations:
     argocd.argoproj.io/sync-wave: "1"
-    reloader.stakater.com/auto: "true"
+    reloader.stakater.com/auto: "true"  # see config map/secret changes and reload auto
 
 spec:
   replicas: {{ .Values.replicas }}
